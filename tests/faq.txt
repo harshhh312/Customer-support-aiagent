@@ -1,0 +1,16 @@
+Frequently Asked Questions
+
+Q: How do I reset my password?
+A: Go to the login page and click "Forgot Password". You will receive a reset link via email. The link expires in 15 minutes.
+
+Q: What is your refund policy?
+A: We offer a full refund within 30 days of purchase. No questions asked. Contact our billing team at billing@example.com.
+
+Q: How long does shipping take?
+A: Standard shipping takes 3-5 business days. Express shipping takes 1-2 business days and costs $15 extra.
+
+Q: Does the Pro plan include API access?
+A: Yes, the Pro plan includes full API access with a rate limit of 1,000 requests per day. The Enterprise plan has unlimited requests.
+
+Q: My app is crashing on startup. What do I do?
+A: First, clear your app cache. If that doesn't work, uninstall and reinstall the latest version from our website. Ensure your operating system is updated to the latest version.
