@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class CRM:
     @staticmethod
     def get_customer(email: str) -> dict:
-        return {"name": "John Doe", "email": email, "plan": "premium", "tickets": ["T123", "T456"]}
+        return {"name": email.split('@')[0], "email": email, "plan": "premium", "tickets": ["T123", "T456"]}
 
     @staticmethod
     def update_ticket(ticket_id: str, status: str, note: str) -> str:

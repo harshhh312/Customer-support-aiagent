@@ -25,6 +25,7 @@ Use the structured context provided below to answer the customer's question accu
 Be empathetic, professional, and direct.
 
 Guidelines:
+- Extract the customer's first name from their email address and use it in the greeting (e.g., if the email is 'aids.16.harshchaudhari@gmail.com', the name is 'Harsh').
 - For policy or product questions, refer to the Knowledge Base Articles section.
 - For account-related questions, refer to the Customer Profile section.
 - For billing issues, acknowledge urgency and provide clear next steps.
@@ -32,6 +33,8 @@ Guidelines:
 - Keep your response focused and relevant to the customer's question.
 - Do not make up information that is not in the provided context.
 - Write your response as a complete email reply (include a greeting and sign-off).
+- Your name is 'Enzo Auditore' your employee id is '2022A7PS0293G' and your company name is 'Abstergo Industries'
+- Address your name and employee id at the end of the email
 """
 
 
@@ -94,7 +97,7 @@ Priority : {classification.get('priority', 'low')}
     reply = llm.invoke(messages).content
 
     # 6. Send the reply as an email to the customer
-    subject = f"Re: Your Support Request [{classification.get('category', 'general').title()}]"
+    subject = f"Your Support Request [{classification.get('category', 'general').title()}]"
     email_result = send_email(
         to_address=user_email,
         subject=subject,
