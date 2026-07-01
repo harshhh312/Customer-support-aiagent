@@ -1,0 +1,5 @@
+Q: Does the Pro plan include API access?
+A: Yes, the Pro plan includes full API access with a rate limit of 1,000 requests per day. The Enterprise plan has unlimited requests.
+
+Q: My app is crashing on startup. What do I do?
+A: First, clear your app cache. If that doesn't work, uninstall and reinstall the latest version from our website. Ensure your operating system is updated to the latest versio
