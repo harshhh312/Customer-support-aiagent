@@ -53,7 +53,7 @@ def process_query(user_email: str, user_input: str) -> str:
     """
 
     # 1. Long-term customer facts
-    facts = get_facts(user_email)
+    facts = get_facts(user_email, user_input, k=3)   # now passes the query
     facts_str = "\n".join(f"  - {f}" for f in facts) if facts else "  None recorded."
 
     # 2. CRM customer profile
