@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables (SECRETS!)
+.env
+.env.local
+
+# Local databases and vector stores
+data/
+chroma_db/
+memory_chroma/
+*.db
+*.sqlite
+
+# Docker volumes (prevents uploading 5GB models)
+ollama_data/
+*.zip
+*.tar.gz
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
