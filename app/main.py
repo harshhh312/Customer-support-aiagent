@@ -1,44 +1,67 @@
-from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# Import your modules
 from .agent import process_query
-from .memory import init_db
-import uvicorn
+from .conversation_memory import clear_conversation
 
+app = FastAPI(title="Abstergo Support AI", version="1.0.0")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initialise resources on startup (DB tables, etc.)."""
-    init_db()          # creates user_memory table if it doesn't exist
-    yield
-    # (shutdown logic goes here if needed)
+# --- CORS (Allow Streamlit to talk to FastAPI) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-
-app = FastAPI(title="Customer Support AI Agent", lifespan=lifespan)
-
-
-class QueryRequest(BaseModel):
+# ========================================
+# 📦 REQUEST MODELS
+# ========================================
+class ChatRequest(BaseModel):
     email: str
     message: str
 
+# ========================================
+# 🩺 HEALTH CHECK
+# ========================================
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "Abstergo Support AI"}
 
-class QueryResponse(BaseModel):
-    reply: str
+# ========================================
+# 🧑‍⚖️ JUDGE STATUS
+# ========================================
+@app.get("/api/hitl/status")
+async def get_judge_status():
+    judge_enabled = os.getenv("USE_LLM_JUDGE", "True").lower() == "true"
+    return {"mode": judge_enabled}
 
+# ========================================
+# 🗑️ CLEAR HISTORY
+# ========================================
+@app.post("/clear_history/{email}")
+async def clear_history(email: str):
+    clear_conversation(email)
+    return {"message": f"Conversation history cleared for {email}", "email": email}
 
-@app.post("/chat", response_model=QueryResponse)
-async def chat(request: QueryRequest):
+# ========================================
+# 💬 CHAT ENDPOINT
+# ========================================
+@app.post("/chat")
+async def chat(request: ChatRequest):
     try:
         reply = process_query(request.email, request.message)
-        return QueryResponse(reply=reply)
+        return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
+# ========================================
+# 🚀 RUN (for local development)
+# ========================================
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

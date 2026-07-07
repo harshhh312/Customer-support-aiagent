@@ -5,11 +5,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_ollama import ChatOllama
-from langchain_community.llms import Ollama  # <-- ✅ NEW
+from langchain_community.llms import Ollama
 from langchain_core.messages import SystemMessage, HumanMessage
 from .tools import classify_ticket, get_customer_info, send_email
 from .rag import get_retriever
 from .memory import get_facts
+from .conversation_memory import get_conversation, format_history_for_prompt, add_to_conversation  # <-- NEW
 
 # --- Main LLM (for generation) ---
 llm = ChatOllama(
@@ -21,7 +22,7 @@ llm = ChatOllama(
 judge_llm = Ollama(
     model=os.getenv("JUDGE_MODEL", os.getenv("LLM_MODEL", "llama3")),
     base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-    format='json',  # <-- ✅ Works here!
+    format='json',
 )
 
 # --- RAG retriever ---
@@ -78,7 +79,7 @@ Valid format:
 {{"faithfulness_score": 8, "completeness_score": 9, "pass": true, "feedback": "The draft is accurate."}}
 """
     try:
-        response = judge_llm.invoke(judge_prompt)  # <-- Now just the prompt string
+        response = judge_llm.invoke(judge_prompt)
         content = response.strip()
 
         # --- REGEX FALLBACK: Extract the first valid JSON object ---
@@ -145,9 +146,11 @@ def process_query(user_email: str, user_input: str, send_email_flag: bool = True
     2. Fetch customer profile from the CRM.
     3. Keyword-classify the ticket for context.
     4. Retrieve relevant knowledge base articles via vector search.
-    5. Assemble all context and call the LLM once.
-    6. Run LLM-as-Judge self-correction (if enabled).
-    7. Send the generated reply as an email to the customer's address (optional).
+    5. Retrieve conversation history for multi-turn chat.        <-- NEW
+    6. Assemble all context and call the LLM once.
+    7. Run LLM-as-Judge self-correction (if enabled).
+    8. Save the exchange to conversation memory.                <-- NEW
+    9. Send the generated reply as an email to the customer's address (optional).
     """
 
     # 1. Long-term customer facts
@@ -168,7 +171,13 @@ def process_query(user_email: str, user_input: str, send_email_flag: bool = True
     docs = retriever.invoke(user_input)
     kb_context = "\n\n".join(d.page_content for d in docs) if docs else "No relevant articles found."
 
-    # 5. Assemble structured context for the LLM
+    # ========================================
+    # 🗣️ CONVERSATION MEMORY (NEW)
+    # ========================================
+    history = get_conversation(user_email)
+    history_str = format_history_for_prompt(history)
+
+    # 5. Assemble structured context for the LLM (including conversation history)
     context = f"""\
 === Customer Profile ===
 Name    : {customer_name}
@@ -185,6 +194,9 @@ Priority : {classification.get('priority', 'low')}
 
 === Relevant Knowledge Base Articles ===
 {kb_context}
+
+=== Recent Conversation History ===
+{history_str}
 """
 
     messages = [
@@ -211,6 +223,12 @@ Priority : {classification.get('priority', 'low')}
             print("✅ Revised draft generated.")
         else:
             print("✅ Draft passed quality check.")
+
+    # ========================================
+    # 💾 SAVE TO CONVERSATION MEMORY (NEW)
+    # ========================================
+    add_to_conversation(user_email, user_input, reply)
+    print(f"💾 Conversation saved for {user_email} ({len(get_conversation(user_email))} messages)")
 
     # Optional: Name fallback – ensures the greeting always contains the customer's name
     if customer_name and customer_name.lower() not in reply[:200].lower():
