@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abstergo Support AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">🧠 Abstergo</h2>
+                <span class="badge badge-online" id="statusBadge">● Online</span>
+            </div>
+
+            <!-- Status Card -->
+            <div class="sidebar-section">
+                <h3>⚙️ System Status</h3>
+                <div class="status-card">
+                    <div class="status-item" id="backendStatus">
+                        <div><i class="fas fa-server"></i> Backend</div>
+                        <span id="backendStatusText">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <div><i class="fas fa-gavel"></i> LLM Judge</div>
+                        <span id="judgeStatusText" class="badge-judge auto">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Examples -->
+            <div class="sidebar-section">
+                <h3>⚡ Quick Examples</h3>
+                <div class="example-grid">
+                    <button class="example-btn" data-query="What is your refund policy?">
+                        <span>Refund Policy</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="example-btn" data-query="How do I reset my password?">
+                        <span>Reset Password</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="example-btn" data-query="My app crashes on startup, what should I do?">
+                        <span>App Crash</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="example-btn" data-query="I was charged twice for my Pro plan.">
+                        <span>Double Charge</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="sidebar-section history-container">
+                <h3>📜 History</h3>
+                <div id="historyList">
+                    <p class="empty-history">No conversations yet.</p>
+                </div>
+            </div>
+            
+            <button id="clearHistoryBtn" class="clear-btn">
+                <i class="fas fa-trash-alt"></i> Clear History
+            </button>
+
+            <!-- Tech Details Footer -->
+            <div class="sidebar-footer">
+                <span><i class="fas fa-robot"></i> Llama 3 (local)</span>
+                <span><i class="fas fa-database"></i> Chroma (Hybrid RAG)</span>
+                <span><i class="fas fa-memory"></i> SQLite Memory</span>
+            </div>
+        </aside>
+
+        <!-- ========== MAIN CONTENT ========== -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div>
+                    <h1>Customer Support AI</h1>
+                    <p>Enterprise Self-Correcting RAG Assistant</p>
+                </div>
+                <div class="header-time" id="headerTime">🕒 --:--</div>
+            </header>
+
+            <!-- Chat Ticket Form -->
+            <section class="chat-section">
+                <form id="chatForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="emailInput"><i class="fas fa-envelope"></i> Customer Email</label>
+                            <input type="email" id="emailInput" value="test@example.com" required placeholder="name@company.com" />
+                        </div>
+                        <div class="form-group">
+                            <label for="nameInput"><i class="fas fa-user"></i> Name (optional)</label>
+                            <input type="text" id="nameInput" placeholder="e.g., John Doe" />
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label for="questionInput"><i class="fas fa-ticket-alt"></i> Describe the Support Case</label>
+                        <textarea id="questionInput" rows="5" placeholder="e.g., The customer is asking for a refund because they were billed twice..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i> Generate Draft Reply
+                        </button>
+                        <button type="reset" class="btn-secondary" id="clearFormBtn">
+                            <i class="fas fa-undo"></i> Clear Form
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- ========== RESPONSE AREA ========== -->
+            <section id="responseArea" style="display: none;">
+                <!-- Process Timeline -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="step" id="step1"><span class="dot done"></span> RAG Retrieval</div>
+                    <div class="step" id="step2"><span class="dot waiting"></span> LLM Generation</div>
+                    <div class="step" id="step3"><span class="dot waiting"></span> Judge Review</div>
+                </div>
+
+                <!-- Run Metrics -->
+                <div class="metrics-row" id="metricsRow">
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricTime">0.0s</div>
+                        <div class="metric-label">⏱️ Response Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricWords">0</div>
+                        <div class="metric-label">📝 Draft Words</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricLength">0</div>
+                        <div class="metric-label">❓ Query Length</div>
+                    </div>
+                </div>
+
+                <!-- Composer Card -->
+                <div class="reply-box-wrapper">
+                    <div class="reply-header">
+                        <h3>📧 Generated Email Response</h3>
+                        <div class="action-row">
+                            <button id="copyBtn" class="btn-outline"><i class="fas fa-copy"></i> Copy</button>
+                            <button id="downloadBtn" class="btn-outline"><i class="fas fa-download"></i> Download .txt</button>
+                        </div>
+                    </div>
+                    <div class="reply-box" id="replyBox">
+                        <pre id="replyContent"></pre>
+                    </div>
+                </div>
+
+                <!-- Raw Data Drawer -->
+                <div class="inspector-card" id="inspectorCard">
+                    <div class="inspector-header" id="inspectorHeader">
+                        <span class="inspector-title"><i class="fas fa-code"></i> Inspect Raw Response</span>
+                        <i class="fas fa-chevron-down inspector-toggle-icon"></i>
+                    </div>
+                    <div class="inspector-content">
+                        <pre id="inspectorContent">{}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="main-footer">
+                🔒 All data is processed locally • Encrypted local vector store • Ollama + LangChain + ChromaDB
+            </footer>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

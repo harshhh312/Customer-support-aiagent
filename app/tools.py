@@ -5,8 +5,10 @@ import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from langchain.tools import tool
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 logger = logging.getLogger(__name__)
+sentiment_analyzer = SentimentIntensityAnalyzer()
 
 # ---------------------------------------------------------------------------
 # Mock CRM
@@ -92,8 +94,18 @@ def send_email(to_address: str, subject: str, body: str) -> dict:
 def classify_ticket(title: str, description: str) -> str:
     """
     Classify a support ticket into one of: billing, technical, feature_request, general.
-    Returns a JSON string with 'category' and 'priority'.
+    Returns a JSON string with 'category', 'priority', and 'sentiment'.
     """
+    sentiment_scores = sentiment_analyzer.polarity_scores(title + " " + description)
+    compound = sentiment_scores['compound']
+    
+    if compound >= 0.05:
+        sentiment = "positive"
+    elif compound <= -0.05:
+        sentiment = "negative"
+    else:
+        sentiment = "neutral"
+
     if "billing" in title.lower() or "invoice" in description.lower():
         cat, priority = "billing", "high"
     elif "bug" in title.lower() or "error" in description.lower():
@@ -102,7 +114,11 @@ def classify_ticket(title: str, description: str) -> str:
         cat, priority = "feature_request", "medium"
     else:
         cat, priority = "general", "low"
-    return json.dumps({"category": cat, "priority": priority})
+        
+    if sentiment == "negative":
+        priority = "high" # escalate priority if sentiment is negative
+        
+    return json.dumps({"category": cat, "priority": priority, "sentiment": sentiment})
 
 
 @tool

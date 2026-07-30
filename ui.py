@@ -469,6 +469,7 @@ if submitted:
         if response.status_code == 200:
             data = response.json()
             reply = data.get("reply", "No reply generated.")
+            sentiment = data.get("sentiment", "neutral")
             
             with status_placeholder.container():
                 st.markdown("""
@@ -487,7 +488,7 @@ if submitted:
                 st.success(f"✅ Reply generated in {elapsed:.2f} seconds!")
                 
                 # Metrics
-                col_m1, col_m2, col_m3 = st.columns(3)
+                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
                 with col_m1:
                     st.markdown(f"""
                     <div class="metric-box">
@@ -507,6 +508,15 @@ if submitted:
                     <div class="metric-box">
                         <div class="metric-value">{len(question.split())}</div>
                         <div class="metric-label">❓ Query Length</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_m4:
+                    emoji = "😐" if sentiment == "neutral" else "😡" if sentiment == "negative" else "😊"
+                    color = "#f7971e" if sentiment == "neutral" else "#ff6b6b" if sentiment == "negative" else "#2ed573"
+                    st.markdown(f"""
+                    <div class="metric-box">
+                        <div class="metric-value" style="background: none; color: {color}; -webkit-text-fill-color: {color};">{emoji}</div>
+                        <div class="metric-label">{sentiment.upper()}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 

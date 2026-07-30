@@ -17,7 +17,7 @@ def get_document_chunks():
     if not os.path.exists(KNOWLEDGE_BASE_PATH):
         os.makedirs(KNOWLEDGE_BASE_PATH)
         return []
-    loader = DirectoryLoader(KNOWLEDGE_BASE_PATH, glob="**/*.txt", loader_cls=TextLoader)
+    loader = DirectoryLoader(KNOWLEDGE_BASE_PATH, glob="**/*.txt", loader_cls=TextLoader, loader_kwargs={'encoding': 'utf-8'})
     docs = loader.load()
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
@@ -27,10 +27,10 @@ def load_and_index_knowledge_base():
     get_document_chunks.cache_clear()
     chunks = get_document_chunks()
     if not chunks:
-        print("⚠️ No documents found to index.")
+        print("No documents found to index.")
         return None
     vectorstore = Chroma.from_documents(chunks, embedding, persist_directory=VECTOR_DB_PATH)
-    print(f"✅ Indexed {len(chunks)} chunks into Chroma DB.")
+    print(f"Indexed {len(chunks)} chunks into Chroma DB.")
     return vectorstore
 
 def reciprocal_rank_fusion(bm25_results, vector_results, k=60):
